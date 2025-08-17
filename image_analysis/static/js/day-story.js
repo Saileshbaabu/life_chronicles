@@ -45,14 +45,21 @@ function loadAvailablePhotos() {
     
     console.log('Available photos loaded:', availablePhotos.length);
     console.log('Available photos data:', availablePhotos);
+    console.log('Available photos array type:', Array.isArray(availablePhotos));
+    console.log('Available photos length property:', availablePhotos.length);
     
     // Update the uploaded photo count display
     const uploadedPhotoCount = document.getElementById('uploadedPhotoCount');
     if (uploadedPhotoCount) {
         uploadedPhotoCount.textContent = uploadedPhotos.length;
+        console.log('Updated uploaded photo count to:', uploadedPhotos.length);
+    } else {
+        console.warn('uploadedPhotoCount element not found');
     }
     
+    console.log('About to call renderPhotoGrid()');
     renderPhotoGrid();
+    console.log('renderPhotoGrid() called');
 }
 
 function renderPhotoGrid() {
@@ -63,10 +70,26 @@ function renderPhotoGrid() {
         console.error('Photo grid element not found!');
         return;
     }
-    photoGrid.innerHTML = '';
     
-    availablePhotos.forEach(photo => {
-        console.log('Creating photo item for:', photo.filename);
+    // Clear the grid completely
+    photoGrid.innerHTML = '';
+    console.log('Photo grid cleared');
+    
+    if (availablePhotos.length === 0) {
+        console.log('No photos available, showing empty state');
+        photoGrid.innerHTML = `
+            <div style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">
+                <i class="fas fa-images" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                <p>No photos available</p>
+            </div>
+        `;
+        return;
+    }
+    
+    console.log('Rendering', availablePhotos.length, 'photos');
+    
+    availablePhotos.forEach((photo, index) => {
+        console.log(`Creating photo item ${index + 1}/${availablePhotos.length} for:`, photo.filename);
         console.log('Photo data:', photo);
         console.log('Has imageData:', !!photo.imageData);
         console.log('imageData type:', typeof photo.imageData);
@@ -77,6 +100,7 @@ function renderPhotoGrid() {
         photoItem.onclick = () => togglePhotoSelection(photo.id);
         
         const daypartColor = getDaypartColor(photo.daypart);
+        console.log('Daypart color for', photo.daypart, ':', daypartColor);
         
         // If we have actual image data, use it; otherwise use placeholder
         if (photo.imageData) {
@@ -94,7 +118,7 @@ function renderPhotoGrid() {
         } else {
             console.log('Rendering photo with placeholder:', photo.filename, 'no imageData');
             photoItem.innerHTML = `
-                <div class="photo-placeholder" style="background-color: ${daypartColor}; width: 100%; height: 120px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px;">
+                <div class="photo-placeholder" style="background-color: ${daypartColor}; width: 100%; height: 120px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; border: 2px solid #ddd;">
                     ${photo.daypart.toUpperCase()}
                 </div>
                 <div class="photo-info">
@@ -109,7 +133,11 @@ function renderPhotoGrid() {
         
         photoGrid.appendChild(photoItem);
         console.log('Photo item added to grid:', photoItem);
+        console.log('Photo item HTML:', photoItem.outerHTML);
     });
+    
+    console.log('Final photo grid HTML:', photoGrid.innerHTML);
+    console.log('Photo grid children count:', photoGrid.children.length);
     
     updateSelectedCount();
     console.log('Photo grid rendered successfully');
