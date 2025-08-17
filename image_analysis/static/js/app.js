@@ -78,7 +78,15 @@ function showTab(tabName, event) {
     // Load photos if switching to day story tab
     if (tabName === 'day-story') {
         console.log('Loading photos for day story tab');
-        loadAvailablePhotos();
+        // Initialize the Day Story Creator
+        if (typeof initializeDayStoryCreator === 'function') {
+            initializeDayStoryCreator();
+        } else {
+            console.warn('initializeDayStoryCreator function not found, falling back to loadAvailablePhotos');
+            if (typeof loadAvailablePhotos === 'function') {
+                loadAvailablePhotos();
+            }
+        }
     }
 }
 

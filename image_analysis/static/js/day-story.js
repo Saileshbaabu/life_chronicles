@@ -1,10 +1,60 @@
-// Day Story Creator Functions
+// Day Story Creator Functions - Complete Rewrite
 
+// Global variables
+let availablePhotos = [];
+let selectedPhotos = [];
+let uploadedPhotos = [];
+
+// Initialize Day Story Creator
+function initializeDayStoryCreator() {
+    console.log('Initializing Day Story Creator...');
+    
+    // Reset state
+    availablePhotos = [];
+    selectedPhotos = [];
+    
+    // Load photos
+    loadAvailablePhotos();
+    
+    // Initialize event listeners
+    initializeEventListeners();
+    
+    console.log('Day Story Creator initialized successfully');
+}
+
+// Initialize event listeners
+function initializeEventListeners() {
+    // Create story button
+    const createBtn = document.getElementById('createStoryBtn');
+    if (createBtn) {
+        createBtn.addEventListener('click', createDayStory);
+    }
+    
+    // Language selector
+    const langSelector = document.getElementById('storyLanguage');
+    if (langSelector) {
+        langSelector.addEventListener('change', updateStoryOptions);
+    }
+    
+    // Tone selector
+    const toneSelector = document.getElementById('storyTone');
+    if (toneSelector) {
+        toneSelector.addEventListener('change', updateStoryOptions);
+    }
+    
+    // Length selector
+    const lengthSelector = document.getElementById('storyLength');
+    if (lengthSelector) {
+        lengthSelector.addEventListener('change', updateStoryOptions);
+    }
+}
+
+// Load available photos
 function loadAvailablePhotos() {
     console.log('Loading available photos...');
     
     // Use uploaded photos if available, otherwise fall back to mock data
-    if (uploadedPhotos.length > 0) {
+    if (uploadedPhotos && uploadedPhotos.length > 0) {
         console.log('Using uploaded photos:', uploadedPhotos.length);
         availablePhotos = uploadedPhotos.map((photo, index) => ({
             id: `uploaded_${index}`,
@@ -12,12 +62,12 @@ function loadAvailablePhotos() {
             date: photo.date || new Date().toISOString().split('T')[0],
             time: photo.time || '12:00',
             daypart: photo.daypart || 'afternoon',
-            imageData: photo.imageData, // Store the actual image data
-            analysis: photo.analysis // Store the AI analysis
+            imageData: photo.imageData,
+            analysis: photo.analysis
         }));
     } else {
         console.log('No uploaded photos, using mock data');
-        // Mock data for demonstration - in real app, this would come from API
+        // Mock data for demonstration
         availablePhotos = [
             {
                 id: '1',
@@ -45,10 +95,16 @@ function loadAvailablePhotos() {
     
     console.log('Available photos loaded:', availablePhotos.length);
     console.log('Available photos data:', availablePhotos);
-    console.log('Available photos array type:', Array.isArray(availablePhotos));
-    console.log('Available photos length property:', availablePhotos.length);
     
     // Update the uploaded photo count display
+    updateUploadedPhotoCount();
+    
+    // Render the photo grid
+    renderPhotoGrid();
+}
+
+// Update uploaded photo count
+function updateUploadedPhotoCount() {
     const uploadedPhotoCount = document.getElementById('uploadedPhotoCount');
     if (uploadedPhotoCount) {
         uploadedPhotoCount.textContent = uploadedPhotos.length;
@@ -56,16 +112,13 @@ function loadAvailablePhotos() {
     } else {
         console.warn('uploadedPhotoCount element not found');
     }
-    
-    console.log('About to call renderPhotoGrid()');
-    renderPhotoGrid();
-    console.log('renderPhotoGrid() called');
 }
 
+// Render photo grid
 function renderPhotoGrid() {
     console.log('Rendering photo grid...');
+    
     const photoGrid = document.getElementById('photoGrid');
-    console.log('Photo grid element:', photoGrid);
     if (!photoGrid) {
         console.error('Photo grid element not found!');
         return;
@@ -81,6 +134,7 @@ function renderPhotoGrid() {
             <div style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">
                 <i class="fas fa-images" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
                 <p>No photos available</p>
+                <p style="font-size: 12px; margin-top: 10px;">Upload some photos to get started!</p>
             </div>
         `;
         return;
@@ -88,88 +142,149 @@ function renderPhotoGrid() {
     
     console.log('Rendering', availablePhotos.length, 'photos');
     
+    // Create photo items
     availablePhotos.forEach((photo, index) => {
         console.log(`Creating photo item ${index + 1}/${availablePhotos.length} for:`, photo.filename);
-        console.log('Photo data:', photo);
-        console.log('Has imageData:', !!photo.imageData);
-        console.log('imageData type:', typeof photo.imageData);
-        console.log('imageData length:', photo.imageData ? photo.imageData.length : 'N/A');
         
-        const photoItem = document.createElement('div');
-        photoItem.className = `photo-item ${selectedPhotos.includes(photo.id) ? 'selected' : ''}`;
-        photoItem.onclick = () => togglePhotoSelection(photo.id);
-        
-        const daypartColor = getDaypartColor(photo.daypart);
-        console.log('Daypart color for', photo.daypart, ':', daypartColor);
-        
-        // If we have actual image data, use it; otherwise use placeholder
-        if (photo.imageData) {
-            console.log('Rendering photo with image data:', photo.filename, 'imageData length:', photo.imageData.length);
-            photoItem.innerHTML = `
-                <img src="${photo.imageData}" alt="${photo.filename}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" onload="console.log('Image loaded successfully:', '${photo.filename}')" onerror="console.error('Image failed to load:', '${photo.filename}', this.src)">
-                <div class="photo-info">
-                    <div class="photo-filename">${photo.filename}</div>
-                    <div class="photo-time">${photo.time}</div>
-                    <div class="daypart-badge" style="background-color: ${daypartColor}">
-                        ${photo.daypart}
-                    </div>
-                </div>
-            `;
-        } else {
-            console.log('Rendering photo with placeholder:', photo.filename, 'no imageData');
-            photoItem.innerHTML = `
-                <div class="photo-placeholder" style="background-color: ${daypartColor}; width: 100%; height: 120px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; border: 2px solid #ddd;">
-                    ${photo.daypart.toUpperCase()}
-                </div>
-                <div class="photo-info">
-                    <div class="photo-filename">${photo.filename}</div>
-                    <div class="photo-time">${photo.time}</div>
-                    <div class="daypart-badge" style="background-color: ${daypartColor}">
-                        ${photo.daypart}
-                    </div>
-                </div>
-            `;
-        }
-        
+        const photoItem = createPhotoItem(photo);
         photoGrid.appendChild(photoItem);
+        
         console.log('Photo item added to grid:', photoItem);
-        console.log('Photo item HTML:', photoItem.outerHTML);
     });
     
     console.log('Final photo grid HTML:', photoGrid.innerHTML);
     console.log('Photo grid children count:', photoGrid.children.length);
     
+    // Update selected count
     updateSelectedCount();
+    
     console.log('Photo grid rendered successfully');
 }
 
-function togglePhotoSelection(photoId) {
-    if (selectedPhotos.includes(photoId)) {
-        selectedPhotos = selectedPhotos.filter(id => id !== photoId);
+// Create individual photo item
+function createPhotoItem(photo) {
+    const photoItem = document.createElement('div');
+    photoItem.className = `photo-item ${selectedPhotos.includes(photo.id) ? 'selected' : ''}`;
+    photoItem.onclick = () => togglePhotoSelection(photo.id);
+    
+    const daypartColor = getDaypartColor(photo.daypart);
+    console.log('Daypart color for', photo.daypart, ':', daypartColor);
+    
+    // Create photo content
+    if (photo.imageData) {
+        console.log('Rendering photo with image data:', photo.filename);
+        photoItem.innerHTML = createImagePhotoHTML(photo, daypartColor);
     } else {
-        selectedPhotos.push(photoId);
+        console.log('Rendering photo with placeholder:', photo.filename);
+        photoItem.innerHTML = createPlaceholderPhotoHTML(photo, daypartColor);
     }
     
-    renderPhotoGrid();
+    return photoItem;
 }
 
+// Create HTML for photo with actual image
+function createImagePhotoHTML(photo, daypartColor) {
+    return `
+        <div class="photo-image-container">
+            <img src="${photo.imageData}" alt="${photo.filename}" 
+                 class="photo-image" 
+                 onload="console.log('Image loaded successfully:', '${photo.filename}')" 
+                 onerror="console.error('Image failed to load:', '${photo.filename}')">
+        </div>
+        <div class="photo-info">
+            <div class="photo-filename">${photo.filename}</div>
+            <div class="photo-time">${photo.time}</div>
+            <div class="daypart-badge" style="background-color: ${daypartColor}">
+                ${photo.daypart}
+            </div>
+        </div>
+    `;
+}
+
+// Create HTML for photo placeholder
+function createPlaceholderPhotoHTML(photo, daypartColor) {
+    return `
+        <div class="photo-placeholder" style="background-color: ${daypartColor};">
+            <div class="placeholder-icon">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="placeholder-text">${photo.daypart.toUpperCase()}</div>
+        </div>
+        <div class="photo-info">
+            <div class="photo-filename">${photo.filename}</div>
+            <div class="photo-time">${photo.time}</div>
+            <div class="daypart-badge" style="background-color: ${daypartColor}">
+                ${photo.daypart}
+            </div>
+        </div>
+    `;
+}
+
+// Toggle photo selection
+function togglePhotoSelection(photoId) {
+    console.log('Toggling photo selection:', photoId);
+    
+    if (selectedPhotos.includes(photoId)) {
+        selectedPhotos = selectedPhotos.filter(id => id !== photoId);
+        console.log('Photo deselected:', photoId);
+    } else {
+        selectedPhotos.push(photoId);
+        console.log('Photo selected:', photoId);
+    }
+    
+    // Re-render to update selection styling
+    renderPhotoGrid();
+    
+    // Update selected count
+    updateSelectedCount();
+}
+
+// Update selected count display
 function updateSelectedCount() {
     const selectedCount = document.getElementById('selectedCount');
     if (selectedCount) {
         selectedCount.textContent = selectedPhotos.length;
+        console.log('Updated selected count to:', selectedPhotos.length);
+    } else {
+        console.warn('selectedCount element not found');
     }
 }
 
+// Update story options based on selections
+function updateStoryOptions() {
+    const lang = document.getElementById('storyLanguage')?.value || 'en';
+    const tone = document.getElementById('storyTone')?.value || 'diary';
+    const length = document.getElementById('storyLength')?.value || 'medium';
+    
+    console.log('Story options updated:', { lang, tone, length });
+    
+    // Update create button state
+    const createBtn = document.getElementById('createStoryBtn');
+    if (createBtn) {
+        createBtn.disabled = selectedPhotos.length === 0;
+        if (selectedPhotos.length === 0) {
+            createBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Select Photos First';
+        } else {
+            createBtn.innerHTML = '<i class="fas fa-magic"></i> Create Day Story';
+        }
+    }
+}
+
+// Create day story
 function createDayStory() {
+    console.log('Creating day story...');
+    
     if (selectedPhotos.length === 0) {
         showError('Please select at least one photo');
         return;
     }
-
-    const lang = document.getElementById('storyLanguage').value;
-    const tone = document.getElementById('storyTone').value;
-    const length = document.getElementById('storyLength').value;
-
+    
+    const lang = document.getElementById('storyLanguage')?.value || 'en';
+    const tone = document.getElementById('storyTone')?.value || 'diary';
+    const length = document.getElementById('storyLength')?.value || 'medium';
+    
+    console.log('Story parameters:', { lang, tone, length, selectedPhotos });
+    
     // Show loading state
     const createBtn = document.getElementById('createStoryBtn');
     const originalText = createBtn.innerHTML;
@@ -177,24 +292,37 @@ function createDayStory() {
         createBtn.disabled = true;
         createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Story...';
     }
-
+    
     // Mock API call - in real app, this would call the actual stories API
     setTimeout(() => {
-        // Generate mock story based on selected options
-        const story = generateMockStory(selectedPhotos, lang, tone, length);
-        displayGeneratedStory(story);
-        
-        // Reset button
-        if (createBtn) {
-            createBtn.disabled = false;
-            createBtn.innerHTML = originalText;
+        try {
+            // Generate mock story based on selected options
+            const story = generateMockStory(selectedPhotos, lang, tone, length);
+            displayGeneratedStory(story);
+            
+            console.log('Story created successfully:', story);
+        } catch (error) {
+            console.error('Error creating story:', error);
+            showError('Failed to create story. Please try again.');
+        } finally {
+            // Reset button
+            if (createBtn) {
+                createBtn.disabled = false;
+                createBtn.innerHTML = originalText;
+            }
         }
     }, 2000);
 }
 
+// Generate mock story
 function generateMockStory(photoIds, lang, tone, length) {
+    console.log('Generating mock story for:', { photoIds, lang, tone, length });
+    
     const photos = availablePhotos.filter(p => photoIds.includes(p.id));
     const dayparts = [...new Set(photos.map(p => p.daypart))].sort();
+    
+    console.log('Photos for story:', photos);
+    console.log('Dayparts:', dayparts);
     
     // Generate story based on language
     if (lang === 'ta') {
@@ -205,12 +333,8 @@ function generateMockStory(photoIds, lang, tone, length) {
             sections: photos.map((photo, index) => ({
                 media_id: photo.id,
                 section_heading: getTamilDaypart(photo.daypart),
-                body_md: getTamilSectionBody(photo, tone),
-                image_caption: photo.analysis?.img_caption || `${getTamilDaypart(photo.daypart)} புகைப்படம்`,
-                alt_text: `${photo.filename} - ${getTamilDaypart(photo.daypart)} நேரத்தில் எடுக்கப்பட்டது`,
-                tags: [getTamilDaypart(photo.daypart), getTamilTone(tone)]
-            })),
-            outro_md: getTamilOutro(tone, dayparts)
+                section_content: getTamilSectionContent(photo, tone, length)
+            }))
         };
     } else {
         return {
@@ -219,161 +343,214 @@ function generateMockStory(photoIds, lang, tone, length) {
             intro_md: getEnglishIntro(tone, dayparts),
             sections: photos.map((photo, index) => ({
                 media_id: photo.id,
-                section_heading: photo.daypart.charAt(0).toUpperCase() + photo.daypart.slice(1),
-                body_md: getEnglishSectionBody(photo, tone),
-                image_caption: photo.analysis?.img_caption || `${photo.daypart} photo`,
-                alt_text: `${photo.filename} - taken during ${photo.daypart}`,
-                tags: [photo.daypart, tone]
-            })),
-            outro_md: getEnglishOutro(tone, dayparts)
+                section_heading: getEnglishDaypart(photo.daypart),
+                section_content: getEnglishSectionContent(photo, tone, length)
+            }))
         };
     }
 }
 
-// English story generation helpers
+// Display generated story
+function displayGeneratedStory(story) {
+    console.log('Displaying generated story:', story);
+    
+    const generatedStory = document.getElementById('generatedStory');
+    const storyContent = document.getElementById('storyContent');
+    
+    if (!generatedStory || !storyContent) {
+        console.error('Story display elements not found');
+        return;
+    }
+    
+    // Create story HTML
+    let storyHTML = `
+        <div class="story-header">
+            <h2 class="story-title">${story.title}</h2>
+            <p class="story-subtitle">${story.subtitle}</p>
+        </div>
+        <div class="story-intro">
+            ${story.intro_md}
+        </div>
+        <div class="story-sections">
+    `;
+    
+    story.sections.forEach((section, index) => {
+        storyHTML += `
+            <div class="story-section">
+                <h3 class="section-heading">${section.section_heading}</h3>
+                <div class="section-content">
+                    ${section.section_content}
+                </div>
+            </div>
+        `;
+    });
+    
+    storyHTML += `
+        </div>
+        <div class="story-actions">
+            <button class="btn btn-primary" onclick="downloadStory()">
+                <i class="fas fa-download"></i> Download Story
+            </button>
+            <button class="btn btn-secondary" onclick="shareStory()">
+                <i class="fas fa-share"></i> Share Story
+            </button>
+        </div>
+    `;
+    
+    storyContent.innerHTML = storyHTML;
+    generatedStory.style.display = 'block';
+    
+    // Scroll to story
+    generatedStory.scrollIntoView({ behavior: 'smooth' });
+    
+    console.log('Story displayed successfully');
+}
+
+// Helper functions for story generation
 function getEnglishTitle(tone, dayparts) {
-    const titles = {
-        diary: `A ${dayparts[0]} to ${dayparts[dayparts.length - 1]} Day`,
-        travelogue: `Journey Through ${dayparts.join(' and ')}`,
-        reportage: `Chronicles of ${dayparts.join(', ')}`
+    const toneMap = {
+        diary: 'A Day in My Life',
+        travelogue: 'My Journey Through the Day',
+        reportage: 'Daily Chronicle Report'
     };
-    return titles[tone] || 'My Day Story';
+    return toneMap[tone] || 'My Day Story';
 }
 
 function getEnglishSubtitle(tone, photoCount) {
-    const subtitles = {
-        diary: `Capturing ${photoCount} moments of daily life`,
-        travelogue: `Exploring life through ${photoCount} snapshots`,
-        reportage: `Documenting ${photoCount} moments in time`
-    };
-    return subtitles[tone] || `A story in ${photoCount} photos`;
+    return `Capturing ${photoCount} moments across ${dayparts.length} time periods`;
 }
 
 function getEnglishIntro(tone, dayparts) {
-    const intros = {
-        diary: `Today unfolded across ${dayparts.length} distinct phases, each captured in its own moment.`,
-        travelogue: `From ${dayparts[0]} to ${dayparts[dayparts.length - 1]}, this journey through time reveals the beauty of everyday moments.`,
-        reportage: `This collection of ${dayparts.length} time periods tells the story of a day lived fully.`
-    };
-    return intros[tone] || `A day documented through ${dayparts.length} different times.`;
+    return `This story captures the essence of a day through ${dayparts.join(', ')} moments, each telling its own unique tale.`;
 }
 
-function getEnglishSectionBody(photo, tone) {
-    const bodies = {
-        diary: `This ${photo.daypart} moment captures ${photo.filename}, a snapshot of daily life.`,
-        travelogue: `During ${photo.daypart}, we find ourselves in ${photo.filename}, exploring the journey of the day.`,
-        reportage: `The ${photo.daypart} brings us ${photo.filename}, documenting this moment in time.`
+function getEnglishDaypart(daypart) {
+    const daypartMap = {
+        morning: 'Morning',
+        afternoon: 'Afternoon',
+        evening: 'Evening',
+        night: 'Night'
     };
-    return bodies[tone] || `A ${photo.daypart} photo showing ${photo.filename}.`;
+    return daypartMap[daypart] || daypart;
 }
 
-function getEnglishOutro(tone, dayparts) {
-    const outros = {
-        diary: `As the day concludes, these ${dayparts.length} moments remind us of life's simple beauty.`,
-        travelogue: `From ${dayparts[0]} to ${dayparts[dayparts.length - 1]}, this journey has been one of discovery and wonder.`,
-        reportage: `This documentation of ${dayparts.length} time periods captures the essence of a day well lived.`
-    };
-    return outros[tone] || `A day well documented through these ${dayparts.length} moments.`;
+function getEnglishSectionContent(photo, tone, length) {
+    const baseContent = `This ${photo.daypart} moment captures ${photo.filename} at ${photo.time}.`;
+    
+    if (length === 'short') {
+        return baseContent;
+    } else if (length === 'medium') {
+        return `${baseContent} The ${photo.daypart} light brings out the unique character of this scene.`;
+    } else {
+        return `${baseContent} The ${photo.daypart} light brings out the unique character of this scene. This moment represents the transition and mood of the ${photo.daypart} period.`;
+    }
 }
 
-// Tamil story generation helpers
+// Tamil helper functions
 function getTamilTitle(tone, dayparts) {
-    const titles = {
-        diary: `${dayparts[0]} முதல் ${dayparts[dayparts.length - 1]} வரை ஒரு நாள்`,
-        travelogue: `${dayparts.join(' மற்றும் ')} வழியாக பயணம்`,
-        reportage: `${dayparts.join(', ')} காலங்களின் கதைகள்`
+    const toneMap = {
+        diary: 'என் வாழ்க்கையில் ஒரு நாள்',
+        travelogue: 'நாள் முழுவதும் என் பயணம்',
+        reportage: 'தினசரி நிகழ்வு அறிக்கை'
     };
-    return titles[tone] || 'என் நாள் கதை';
+    return toneMap[tone] || 'என் நாள் கதை';
 }
 
 function getTamilSubtitle(tone, photoCount) {
-    const subtitles = {
-        diary: `${photoCount} தருணங்களை பதிவு செய்து`,
-        travelogue: `${photoCount} புகைப்படங்களில் வாழ்க்கையை ஆராய்ந்து`,
-        reportage: `${photoCount} தருணங்களை ஆவணப்படுத்தி`
-    };
-    return subtitles[tone] || `${photoCount} புகைப்படங்களில் ஒரு கதை`;
+    return `${photoCount} கணங்களை ${dayparts.length} நேரப்பிரிவுகளில் பிடித்தது`;
 }
 
 function getTamilIntro(tone, dayparts) {
-    const intros = {
-        diary: `இன்று ${dayparts.length} வெவ்வேறு கட்டங்களில் விரிந்தது, ஒவ்வொன்றும் தனது சொந்த தருணத்தில் பதிவு செய்யப்பட்டது.`,
-        travelogue: `${dayparts[0]} முதல் ${dayparts[dayparts.length - 1]} வரை, நேரத்தின் வழியாக இந்த பயணம் அன்றாட தருணங்களின் அழகை வெளிப்படுத்துகிறது.`,
-        reportage: `${dayparts.length} கால கட்டங்களின் இந்த தொகுப்பு முழுமையாக வாழ்ந்த ஒரு நாளின் கதையை சொல்கிறது.`
-    };
-    return intros[tone] || `${dayparts.length} வெவ்வேறு நேரங்களில் ஆவணப்படுத்தப்பட்ட ஒரு நாள்.`;
+    return `இந்த கதை ${dayparts.join(', ')} கணங்களில் ஒரு நாளின் சாரத்தை பிடிக்கிறது, ஒவ்வொன்றும் தனக்கென தனித்த கதையை சொல்கிறது.`;
 }
 
-function getTamilSectionBody(photo, tone) {
-    const bodies = {
-        diary: `இந்த ${getTamilDaypart(photo.daypart)} தருணம் ${photo.filename} ஐ பதிவு செய்கிறது, அன்றாட வாழ்க்கையின் ஒரு புகைப்படம்.`,
-        travelogue: `${getTamilDaypart(photo.daypart)} நேரத்தில், நாம் ${photo.filename} இல் நம்மை காண்கிறோம், நாளின் பயணத்தை ஆராய்கிறோம்.`,
-        reportage: `${getTamilDaypart(photo.daypart)} நமக்கு ${photo.filename} ஐ கொண்டு வருகிறது, நேரத்தின் இந்த தருணத்தை ஆவணப்படுத்துகிறது.`
-    };
-    return bodies[tone] || `${getTamilDaypart(photo.daypart)} புகைப்படம் ${photo.filename} ஐ காட்டுகிறது.`;
-}
-
-function getTamilOutro(tone, dayparts) {
-    const outros = {
-        diary: `நாள் முடிவடையும்போது, இந்த ${dayparts.length} தருணங்கள் வாழ்க்கையின் எளிய அழகை நமக்கு நினைவூட்டுகின்றன.`,
-        travelogue: `${dayparts[0]} முதல் ${dayparts[dayparts.length - 1]} வரை, இந்த பயணம் கண்டுபிடிப்பு மற்றும் வியப்பின் ஒன்றாக இருந்தது.`,
-        reportage: `${dayparts.length} கால கட்டங்களின் இந்த ஆவணப்படுத்தல் நன்கு வாழ்ந்த ஒரு நாளின் சாரத்தை பிடிக்கிறது.`
-    };
-    return outros[tone] || `இந்த ${dayparts.length} தருணங்களில் நன்கு ஆவணப்படுத்தப்பட்ட ஒரு நாள்.`;
-}
-
-// Tamil translation helpers
 function getTamilDaypart(daypart) {
-    const translations = {
+    const daypartMap = {
         morning: 'காலை',
         afternoon: 'மதியம்',
         evening: 'மாலை',
         night: 'இரவு'
     };
-    return translations[daypart] || daypart;
+    return daypartMap[daypart] || daypart;
 }
 
-function getTamilTone(tone) {
-    const translations = {
-        diary: 'நாட்குறிப்பு',
-        travelogue: 'பயணக் கட்டுரை',
-        reportage: 'செய்தி அறிக்கை'
-    };
-    return translations[tone] || tone;
-}
-
-function displayGeneratedStory(story) {
-    const generatedStory = document.getElementById('generatedStory');
-    const storyContent = document.getElementById('storyContent');
+function getTamilSectionContent(photo, tone, length) {
+    const baseContent = `இந்த ${getTamilDaypart(photo.daypart)} கணம் ${photo.filename} ஐ ${photo.time} மணிக்கு பிடிக்கிறது.`;
     
-    if (generatedStory && storyContent) {
-        // Build the story display HTML
-        const storyHTML = `
-            <div class="story-header">
-                <h4>${story.title}</h4>
-                <p class="story-subtitle">${story.subtitle}</p>
-            </div>
-            <div class="story-intro">
-                <p>${story.intro_md}</p>
-            </div>
-            <div class="story-sections">
-                ${story.sections.map(section => `
-                    <div class="story-section">
-                        <h5>${section.section_heading}</h5>
-                        <p>${section.body_md}</p>
-                        <div class="section-meta">
-                            <small><strong>Caption:</strong> ${section.image_caption}</small><br>
-                            <small><strong>Tags:</strong> ${section.tags.join(', ')}</small>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-            <div class="story-outro">
-                <p>${story.outro_md}</p>
-            </div>
-        `;
-        
-        storyContent.innerHTML = storyHTML;
-        generatedStory.style.display = 'block';
+    if (length === 'short') {
+        return baseContent;
+    } else if (length === 'medium') {
+        return `${baseContent} ${getTamilDaypart(photo.daypart)} ஒளி இந்த காட்சியின் தனித்துவமான பண்பை வெளிக்கொணர்கிறது.`;
+    } else {
+        return `${baseContent} ${getTamilDaypart(photo.daypart)} ஒளி இந்த காட்சியின் தனித்துவமான பண்பை வெளிக்கொணர்கிறது. இந்த கணம் ${getTamilDaypart(photo.daypart)} காலத்தின் மாற்றத்தையும் மனநிலையையும் குறிக்கிறது.`;
     }
 }
+
+// Utility functions
+function getDaypartColor(daypart) {
+    const colors = {
+        morning: '#4CAF50',    // Green
+        afternoon: '#FF9800',  // Orange
+        evening: '#9C27B0',    // Purple
+        night: '#2196F3'       // Blue
+    };
+    return colors[daypart] || '#666';
+}
+
+// Error handling
+function showError(message) {
+    console.error('Error:', message);
+    
+    // Create or update error message element
+    let errorElement = document.getElementById('dayStoryError');
+    if (!errorElement) {
+        errorElement = document.createElement('div');
+        errorElement.id = 'dayStoryError';
+        errorElement.className = 'error-message';
+        errorElement.style.cssText = `
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #ffcdd2;
+            text-align: center;
+        `;
+        
+        // Insert after photo grid
+        const photoGrid = document.getElementById('photoGrid');
+        if (photoGrid && photoGrid.parentNode) {
+            photoGrid.parentNode.insertBefore(errorElement, photoGrid.nextSibling);
+        }
+    }
+    
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        errorElement.style.display = 'none';
+    }, 5000);
+}
+
+// Download story function
+function downloadStory() {
+    console.log('Downloading story...');
+    // Implementation for downloading story
+    alert('Download functionality coming soon!');
+}
+
+// Share story function
+function shareStory() {
+    console.log('Sharing story...');
+    // Implementation for sharing story
+    alert('Share functionality coming soon!');
+}
+
+// Export functions for global access
+window.initializeDayStoryCreator = initializeDayStoryCreator;
+window.loadAvailablePhotos = loadAvailablePhotos;
+window.renderPhotoGrid = renderPhotoGrid;
+window.togglePhotoSelection = togglePhotoSelection;
+window.createDayStory = createDayStory;
+window.updateStoryOptions = updateStoryOptions;
