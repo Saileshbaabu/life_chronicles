@@ -4,6 +4,7 @@ Pillow>=10.4.0
 openai>=1.12.0
 python-decouple>=3.8
 requests
+reportlab>=4.0.0
 gunicorn
 whitenoise
 psycopg2-binary
