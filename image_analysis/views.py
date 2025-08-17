@@ -62,12 +62,86 @@ def health_check(request):
 
 class RegenerateArticleView(APIView):
     """
-    API view for regenerating articles with additional location context.
+    API view for regenerating articles with additional location context or switching languages.
     """
     
     def post(self, request):
         try:
             data = request.data
+            
+            # Check if this is a language switch request
+            target_language = data.get('target_language')
+            if target_language:
+                return self._handle_language_switch(request, data)
+            else:
+                return self._handle_location_regeneration(request, data)
+                
+        except Exception as e:
+            logger.error(f"Error in RegenerateArticleView: {e}")
+            return Response(
+                {'error': 'Failed to process request', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def _handle_language_switch(self, request, data):
+        """Handle language switching for articles."""
+        try:
+            target_language = data.get('target_language', 'en')
+            img_caption = data.get('img_caption', '')
+            objects = data.get('objects', [])
+            ocr_text = data.get('ocr_text', '')
+            place = data.get('place', '')
+            local_time = data.get('local_time', '')
+            season = data.get('season', '')
+            merged_notes_transcript = data.get('merged_notes_transcript', '')
+            gps = data.get('gps', {})
+            
+            # Create image analysis data structure
+            image_analysis = {
+                'img_caption': img_caption,
+                'objects': objects,
+                'ocr_text': ocr_text,
+                'place': place,
+                'local_time': local_time,
+                'season': season,
+                'merged_notes_transcript': merged_notes_transcript,
+                'gps': gps
+            }
+            
+            # Initialize AI service and generate article in new language
+            ai_service = AIService()
+            
+            # Generate article in the target language
+            article_data = ai_service.generate_article(
+                image_analysis=image_analysis,
+                exif_data={},
+                target_language=target_language
+            )
+            
+            # Return the article data in the expected format
+            return Response({
+                'target_language': target_language,
+                'img_caption': img_caption,
+                'objects': objects,
+                'ocr_text': ocr_text,
+                'place': place,
+                'local_time': local_time,
+                'season': season,
+                'merged_notes_transcript': merged_notes_transcript,
+                'gps': gps,
+                'article': article_data
+            })
+            
+        except Exception as e:
+            logger.error(f"Error switching language: {e}")
+            return Response(
+                {'error': 'Failed to switch language', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    def _handle_location_regeneration(self, request, data):
+        """Handle article regeneration with location context."""
+        try:
             city = data.get('city', '')
             country = data.get('country', '')
             coordinates = data.get('coordinates', '')
@@ -140,7 +214,7 @@ class RegenerateArticleView(APIView):
             })
             
         except Exception as e:
-            logger.error(f"Error regenerating article: {e}")
+            logger.error(f"Error regenerating article with location: {e}")
             return Response(
                 {'error': 'Failed to regenerate article', 'details': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
