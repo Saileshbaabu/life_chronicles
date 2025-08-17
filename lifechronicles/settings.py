@@ -113,6 +113,19 @@ TEMP_DIR = '/tmp'
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 OPENAI_MODEL = 'gpt-4o'
 
+# Validate OpenAI configuration
+if not OPENAI_API_KEY:
+    print("WARNING: OPENAI_API_KEY is not set!")
+    print("Please set OPENAI_API_KEY in your environment variables.")
+else:
+    print(f"OpenAI API Key configured: {OPENAI_API_KEY[:10]}...")
+
+if not OPENAI_MODEL:
+    print("WARNING: OPENAI_MODEL is not set!")
+    print("Using default model: gpt-4o")
+else:
+    print(f"OpenAI Model configured: {OPENAI_MODEL}")
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [

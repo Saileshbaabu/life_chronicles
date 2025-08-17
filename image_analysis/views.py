@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from django.conf import settings
 from django.shortcuts import render
+from django.utils import timezone
 from rest_framework.decorators import api_view
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -32,6 +33,31 @@ def index_view(request):
     Frontend view for the image analysis interface.
     """
     return render(request, 'image_analysis/index.html')
+
+def health_check(request):
+    """
+    Simple health check endpoint to test if the API is working.
+    """
+    from django.conf import settings
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    # Check basic configuration
+    config_status = {
+        'openai_api_key_configured': bool(getattr(settings, 'OPENAI_API_KEY', '')),
+        'openai_model_configured': bool(getattr(settings, 'OPENAI_MODEL', '')),
+        'debug_mode': getattr(settings, 'DEBUG', False),
+        'database_configured': bool(getattr(settings, 'DATABASES', {}),
+    }
+    
+    logger.info(f"Health check requested. Config status: {config_status}")
+    
+    return JsonResponse({
+        'status': 'healthy',
+        'timestamp': timezone.now().isoformat(),
+        'config': config_status
+    })
 
 
 class RegenerateArticleView(APIView):
