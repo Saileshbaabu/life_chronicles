@@ -47,6 +47,9 @@ function initializeEventListeners() {
     if (lengthSelector) {
         lengthSelector.addEventListener('change', updateStoryOptions);
     }
+    
+    // Day Story upload functionality
+    initializeDayStoryUpload();
 }
 
 // Load available photos
@@ -545,6 +548,156 @@ function shareStory() {
     console.log('Sharing story...');
     // Implementation for sharing story
     alert('Share functionality coming soon!');
+}
+
+// Day Story Upload Functionality
+function initializeDayStoryUpload() {
+    console.log('Initializing Day Story upload functionality...');
+    
+    const uploadArea = document.getElementById('dayStoryUploadArea');
+    const imageInput = document.getElementById('dayStoryImageInput');
+    const uploadBtn = document.getElementById('dayStoryUploadBtn');
+    
+    if (!uploadArea || !imageInput || !uploadBtn) {
+        console.warn('Day Story upload elements not found');
+        return;
+    }
+    
+    // Click to upload
+    uploadArea.addEventListener('click', () => {
+        imageInput.click();
+    });
+    
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#0056b3';
+        uploadArea.style.background = '#e6f3ff';
+    });
+    
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#007bff';
+        uploadArea.style.background = '#f0f8ff';
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#007bff';
+        uploadArea.style.background = '#f0f8ff';
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleDayStoryImageUpload(files);
+        }
+    });
+    
+    // File input change
+    imageInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleDayStoryImageUpload(e.target.files);
+        }
+    });
+    
+    // Upload button
+    uploadBtn.addEventListener('click', () => {
+        imageInput.click();
+    });
+    
+    console.log('Day Story upload functionality initialized');
+}
+
+function handleDayStoryImageUpload(files) {
+    console.log('Handling Day Story image upload:', files.length, 'files');
+    
+    Array.from(files).forEach((file, index) => {
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imageData = e.target.result;
+                
+                // Create photo object
+                const photo = {
+                    id: `day_story_${Date.now()}_${index}`,
+                    filename: file.name,
+                    date: new Date().toISOString().split('T')[0],
+                    time: new Date().toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                    }),
+                    daypart: getCurrentDaypart(),
+                    imageData: imageData,
+                    analysis: null
+                };
+                
+                // Add to uploaded photos
+                uploadedPhotos.push(photo);
+                
+                // Update available photos
+                availablePhotos.push(photo);
+                
+                // Update displays
+                updateUploadedPhotoCount();
+                updateDayStoryUploadedCount();
+                renderPhotoGrid();
+                
+                console.log('Photo added to Day Story Creator:', photo);
+                showSuccess(`Photo "${file.name}" added successfully!`);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+function getCurrentDaypart() {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    if (hour >= 17 && hour < 21) return 'evening';
+    return 'night';
+}
+
+function updateDayStoryUploadedCount() {
+    const dayStoryUploadedCount = document.getElementById('dayStoryUploadedCount');
+    if (dayStoryUploadedCount) {
+        dayStoryUploadedCount.textContent = uploadedPhotos.length;
+    }
+}
+
+function showSuccess(message) {
+    console.log('Success:', message);
+    
+    // Create or update success message element
+    let successElement = document.getElementById('dayStorySuccess');
+    if (!successElement) {
+        successElement = document.createElement('div');
+        successElement.id = 'dayStorySuccess';
+        successElement.className = 'success-message';
+        successElement.style.cssText = `
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #c8e6c9;
+            text-align: center;
+        `;
+        
+        // Insert after photo grid
+        const photoGrid = document.getElementById('photoGrid');
+        if (photoGrid && photoGrid.parentNode) {
+            photoGrid.parentNode.insertBefore(successElement, photoGrid.nextSibling);
+        }
+    }
+    
+    successElement.textContent = message;
+    successElement.style.display = 'block';
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        successElement.style.display = 'none';
+    }, 3000);
 }
 
 // Export functions for global access

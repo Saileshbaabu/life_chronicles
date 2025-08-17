@@ -1345,21 +1345,51 @@
                     <!-- Photo Selection -->
                     <div class="photo-selection">
                         <h3>Select Photos</h3>
+                        
+                        <!-- Upload Section -->
+                        <div class="upload-section" style="margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 12px; border: 2px dashed #dee2e6;">
+                            <h4 style="margin-top: 0; color: #495057;">
+                                <i class="fas fa-cloud-upload-alt"></i> Upload New Photos
+                            </h4>
+                            <p style="color: #6c757d; margin-bottom: 15px;">
+                                Upload photos to add them to your Day Story Creator
+                            </p>
+                            
+                            <!-- Upload Area -->
+                            <div class="day-story-upload-area" id="dayStoryUploadArea" style="border: 2px dashed #007bff; border-radius: 8px; padding: 30px; text-align: center; background: #f0f8ff; cursor: pointer; transition: all 0.3s ease;">
+                                <i class="fas fa-camera" style="font-size: 2rem; color: #007bff; margin-bottom: 10px;"></i>
+                                <p style="margin: 5px 0; color: #0056b3; font-weight: 600;">Click to upload or drag & drop photos</p>
+                                <p style="margin: 5px 0; color: #6c757d; font-size: 0.9rem;">Supports: JPG, PNG, GIF (Max: 10MB each)</p>
+                                <input type="file" id="dayStoryImageInput" multiple accept="image/*" style="display: none;">
+                            </div>
+                            
+                            <div style="margin-top: 15px;">
+                                <button class="btn btn-primary" id="dayStoryUploadBtn" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 500;">
+                                    <i class="fas fa-upload"></i> Upload Photos
+                                </button>
+                                <span style="margin-left: 10px; color: #6c757d; font-size: 0.9rem;">
+                                    <span id="dayStoryUploadedCount">0</span> photos ready for story creation
+                                </span>
+                            </div>
+                        </div>
+                        
                         <div class="upload-status" style="margin-bottom: 15px; padding: 10px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #007bff;">
                             <p style="margin: 0; color: #0056b3;">
                                 <i class="fas fa-info-circle"></i> 
-                                <strong>Upload Status:</strong> 
-                                <span id="uploadedPhotoCount">0</span> photos uploaded
+                                <strong>Available Photos:</strong> 
+                                <span id="uploadedPhotoCount">0</span> photos available
                             </p>
                         </div>
+                        
                         <div class="photo-grid" id="photoGrid">
                             <!-- Photos will be loaded here -->
                             <div style="text-align: center; color: #666; padding: 40px;">
                                 <i class="fas fa-images" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                                <p>Loading photos...</p>
-                                <p style="font-size: 12px; margin-top: 10px;">Debug: Photo grid container is visible</p>
+                                <p>No photos available yet</p>
+                                <p style="font-size: 12px; margin-top: 10px;">Upload photos above to get started</p>
                             </div>
                         </div>
+                        
                         <div class="photo-selection-info">
                             <p>Selected: <span id="selectedCount">0</span> photos</p>
                         </div>
