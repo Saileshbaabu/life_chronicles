@@ -3,7 +3,6 @@ Daypart services for categorizing photos by time of day
 """
 from datetime import datetime, time
 from typing import Optional, Union
-import pytz
 from zoneinfo import ZoneInfo
 import logging
 
@@ -41,7 +40,7 @@ def bucket_daypart(local_dt: Union[datetime, time]) -> str:
     else:
         return 'night'
 
-def tz_for_place(place_ctx: dict) -> pytz.timezone:
+def tz_for_place(place_ctx: dict) -> ZoneInfo:
     """
     Get timezone for a place context.
     
@@ -49,13 +48,13 @@ def tz_for_place(place_ctx: dict) -> pytz.timezone:
         place_ctx: Dictionary with place information including timezone, lat, lon
         
     Returns:
-        pytz timezone object
+        ZoneInfo timezone object
     """
     # If timezone is explicitly provided, use it
     if place_ctx.get('timezone'):
         try:
-            return pytz.timezone(place_ctx['timezone'])
-        except pytz.exceptions.UnknownTimeZoneError:
+            return ZoneInfo(place_ctx['timezone'])
+        except Exception:
             logger.warning(f"Unknown timezone: {place_ctx['timezone']}")
     
     # Try to derive timezone from coordinates
@@ -67,15 +66,15 @@ def tz_for_place(place_ctx: dict) -> pytz.timezone:
             # Use zoneinfo to get timezone from coordinates
             tz = ZoneInfo.atlas().get((lat, lon))
             if tz:
-                return pytz.timezone(str(tz))
+                return tz
         except Exception as e:
             logger.warning(f"Failed to derive timezone from coordinates: {e}")
     
     # Fallback to UTC
     logger.info("Using UTC as fallback timezone")
-    return pytz.UTC
+    return ZoneInfo("UTC")
 
-def to_local(utc_dt: datetime, tz: pytz.timezone) -> datetime:
+def to_local(utc_dt: datetime, tz: ZoneInfo) -> datetime:
     """
     Convert UTC datetime to local timezone.
     
@@ -88,7 +87,7 @@ def to_local(utc_dt: datetime, tz: pytz.timezone) -> datetime:
     """
     if utc_dt.tzinfo is None:
         # Assume UTC if no timezone info
-        utc_dt = pytz.UTC.localize(utc_dt)
+        utc_dt = utc_dt.replace(tzinfo=ZoneInfo("UTC"))
     
     return utc_dt.astimezone(tz)
 
