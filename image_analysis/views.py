@@ -264,6 +264,8 @@ class ImageAnalysisView(APIView):
                 
         except Exception as e:
             logger.error(f"Error processing image analysis request: {e}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             return Response(
                 {'error': 'Internal server error', 'details': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

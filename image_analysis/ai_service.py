@@ -13,8 +13,17 @@ class AIService:
     """Service class for AI image analysis using OpenAI GPT-4o."""
     
     def __init__(self):
+        if not hasattr(settings, 'OPENAI_API_KEY') or not settings.OPENAI_API_KEY:
+            logger.error("OPENAI_API_KEY not configured in settings")
+            raise ValueError("OpenAI API key not configured")
+        
+        if not hasattr(settings, 'OPENAI_MODEL') or not settings.OPENAI_MODEL:
+            logger.error("OPENAI_MODEL not configured in settings")
+            raise ValueError("OpenAI model not configured")
+        
         self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
         self.model = settings.OPENAI_MODEL
+        logger.info(f"AIService initialized with model: {self.model}")
     
     def encode_image_to_base64(self, image_path):
         """
@@ -44,8 +53,11 @@ class AIService:
             dict: Analysis results containing caption, objects, and OCR text
         """
         try:
+            logger.info(f"Starting image analysis for: {image_path}")
+            
             # Encode image to base64
             base64_image = self.encode_image_to_base64(image_path)
+            logger.info(f"Image encoded to base64, length: {len(base64_image)}")
             
             # Prepare the prompt for the AI model
             prompt = """
@@ -86,25 +98,33 @@ class AIService:
             """
             
             # Call OpenAI API
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
+            logger.info(f"Calling OpenAI API with model: {self.model}")
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{base64_image}"
+                                    }
                                 }
-                            }
-                        ]
-                    }
-                ],
-                max_tokens=1000,
-                temperature=0.1
-            )
+                            ]
+                        }
+                    ],
+                    max_tokens=1000,
+                    temperature=0.1
+                )
+                logger.info("OpenAI API call successful")
+            except Exception as api_error:
+                logger.error(f"OpenAI API call failed: {api_error}")
+                logger.error(f"API error type: {type(api_error)}")
+                logger.error(f"API error details: {str(api_error)}")
+                raise
             
             # Parse the response
             ai_response = response.choices[0].message.content
