@@ -9,6 +9,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('image_analysis.urls')),
+    path('', include('image_analysis.urls')),  # Frontend at root
 ]
 
 if settings.DEBUG:
