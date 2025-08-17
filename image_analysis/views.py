@@ -48,7 +48,7 @@ def health_check(request):
         'openai_api_key_configured': bool(getattr(settings, 'OPENAI_API_KEY', '')),
         'openai_model_configured': bool(getattr(settings, 'OPENAI_MODEL', '')),
         'debug_mode': getattr(settings, 'DEBUG', False),
-        'database_configured': bool(getattr(settings, 'DATABASES', {}),
+        'database_configured': bool(getattr(settings, 'DATABASES', {})),
     }
     
     logger.info(f"Health check requested. Config status: {config_status}")
