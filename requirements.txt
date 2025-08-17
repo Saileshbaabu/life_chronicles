@@ -1,0 +1,12 @@
+Django>=5.0.2
+djangorestframework>=3.15.0
+Pillow>=10.4.0
+openai>=1.12.0
+python-decouple>=3.8
+requests
+pytz
+zoneinfo
+gunicorn
+whitenoise
+psycopg2-binary
+dj-database-url

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Chronicles - Image Analysis</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-camera"></i> Life Chronicles</h1>
+            <p>Transform your images into compelling stories with AI-powered analysis</p>
+            
+            <div class="nav-tabs">
+                <a href="#" class="nav-tab active" onclick="showTab('image-analysis', event)">Image Analysis</a>
+                <a href="#" class="nav-tab" onclick="showTab('day-story', event)">Day Story Creator</a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Image Analysis Tab -->
+            <div id="image-analysis-tab" class="tab-content active">
+                <div class="upload-section">
+                    <h2><i class="fas fa-cloud-upload-alt"></i> Upload Your Image</h2>
+                    <p>Drag and drop an image or click to select one</p>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <div class="upload-text">Drop your image here</div>
+                        <div class="upload-subtext">or click to browse</div>
+                        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <button class="upload-btn" id="uploadBtn" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-upload"></i> Upload Image
+                    </button>
+                    
+                    <div class="camera-section">
+                        <button class="camera-btn" id="cameraBtn">
+                            <i class="fas fa-camera"></i> Take Photo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="language-section">
+                    <label for="languageSelect">Select Language:</label>
+                    <select id="languageSelect" class="language-select">
+                        <option value="en">🇺🇸 English</option>
+                        <option value="ta">🇮🇳 தமிழ் (Tamil)</option>
+                    </select>
+                </div>
+
+                <div class="image-preview-section">
+                    <img id="imagePreview" class="image-preview" style="display: none;" onclick="toggleImageSize()">
+                    <div id="noImageMessage" class="no-image-message">
+                        <i class="fas fa-image"></i>
+                        <p>No image selected</p>
+                    </div>
+                    <div class="image-controls">
+                        <button class="image-control-btn" onclick="clearImagePreview()">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing your image...</p>
+                </div>
+
+                <div class="results-section" id="resultsSection">
+                    <div class="analysis-results" id="imageAnalysis">
+                        <!-- Analysis results will be displayed here -->
+                    </div>
+
+                    <div class="article-content" id="articleContent">
+                        <!-- Generated article will be displayed here -->
+                    </div>
+
+                    <div class="metadata-grid" id="metadataGrid">
+                        <!-- Metadata will be displayed here -->
+                    </div>
+
+                    <div class="location-input-section" id="locationInputSection">
+                        <h4><i class="fas fa-map-marker-alt"></i> Add Location Context</h4>
+                        <p>Since we couldn't detect the location from your image, please provide it to enhance the article:</p>
+                        <input type="text" id="locationInput" class="location-input" placeholder="Enter city, landmark, or location..." oninput="handleLocationInput(this)">
+                        <button class="regenerate-btn" onclick="regenerateArticleWithLocation()">
+                            <i class="fas fa-sync-alt"></i> Regenerate Article
+                        </button>
+                    </div>
+
+                    <div class="article-language-switcher" id="articleLanguageSwitcher">
+                        <div class="language-switcher-content">
+                            <span class="current-language" id="currentLanguageText">🇺🇸 English</span>
+                            <button class="language-switch-btn" onclick="switchArticleLanguage('ta')">
+                                Switch to தமிழ்
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="download-section">
+                        <h4><i class="fas fa-download"></i> Download Article</h4>
+                        <a href="#" class="download-btn" onclick="downloadArticle('txt')">
+                            <i class="fas fa-file-text"></i> Text (.txt)
+                        </a>
+                        <a href="#" class="download-btn" onclick="downloadArticle('md')">
+                            <i class="fas fa-file-alt"></i> Markdown (.md)
+                        </a>
+                        <a href="#" class="download-btn" onclick="downloadArticle('json')">
+                            <i class="fas fa-file-code"></i> JSON (.json)
+                        </a>
+                    </div>
+                </div>
+
+                <div class="message success-message" id="successMessage" style="display: none;"></div>
+                <div class="message error-message" id="errorMessage" style="display: none;"></div>
+            </div>
+
+            <!-- Day Story Creator Tab -->
+            <div id="day-story-tab" class="tab-content">
+                <div class="story-creator-section">
+                    <h2><i class="fas fa-book-open"></i> Create Your Day Story</h2>
+                    <p class="story-description">Select multiple photos from the same day to create a beautiful chronological story</p>
+                    
+                    <!-- Photo Selection -->
+                    <div class="photo-selection">
+                        <h3>Select Photos</h3>
+                        <div class="upload-status">
+                            <p>
+                                <i class="fas fa-info-circle"></i> 
+                                <strong>Upload Status:</strong> 
+                                <span id="uploadedPhotoCount">0</span> photos uploaded
+                            </p>
+                        </div>
+                        <div class="photo-grid" id="photoGrid">
+                            <!-- Photos will be loaded here -->
+                            <div style="text-align: center; color: #666; padding: 40px;">
+                                <i class="fas fa-images" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                <p>Loading photos...</p>
+                                <p style="font-size: 12px; margin-top: 10px;">Debug: Photo grid container is visible</p>
+                            </div>
+                        </div>
+                        <div class="photo-selection-info">
+                            <p>Selected: <span id="selectedCount">0</span> photos</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Story Options -->
+                    <div class="story-options">
+                        <h3>Story Options</h3>
+                        <div class="options-grid">
+                            <div class="option-group">
+                                <label for="storyLanguage">Language:</label>
+                                <select id="storyLanguage" class="story-select">
+                                    <option value="en">🇺🇸 English</option>
+                                    <option value="ta">🇮🇳 தமிழ் (Tamil)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="option-group">
+                                <label for="storyTone">Tone:</label>
+                                <select id="storyTone" class="story-select">
+                                    <option value="diary">📖 Diary</option>
+                                    <option value="travelogue">✈️ Travelogue</option>
+                                    <option value="reportage">📰 Reportage</option>
+                                </select>
+                            </div>
+                            
+                            <div class="option-group">
+                                <label for="storyLength">Length:</label>
+                                <select id="storyLength" class="story-select">
+                                    <option value="short">📝 Short</option>
+                                    <option value="medium">📄 Medium</option>
+                                    <option value="long">📚 Long</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Create Button -->
+                    <div class="create-story-section">
+                        <button class="create-story-btn" id="createStoryBtn" onclick="createDayStory()">
+                            <i class="fas fa-magic"></i> Create Day Story
+                        </button>
+                    </div>
+                    
+                    <!-- Generated Story Display -->
+                    <div id="generatedStory" class="generated-story" style="display: none;">
+                        <h3>Your Generated Story</h3>
+                        <div id="storyContent" class="story-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="camera-modal">
+        <div class="camera-content">
+            <h3><i class="fas fa-camera"></i> Take a Photo</h3>
+            <video id="cameraVideo" class="camera-video" autoplay></video>
+            <div class="camera-controls">
+                <button class="camera-control-btn" onclick="capturePhoto()">
+                    <i class="fas fa-camera"></i> Capture
+                </button>
+                <button class="camera-control-btn danger" onclick="closeCamera()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/app.js' %}"></script>
+    <script src="{% static 'js/image-analysis.js' %}"></script>
+    <script src="{% static 'js/day-story.js' %}"></script>
+</body>
+</html>
